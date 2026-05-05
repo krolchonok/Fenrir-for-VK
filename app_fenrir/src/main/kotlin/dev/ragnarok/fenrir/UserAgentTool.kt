@@ -76,6 +76,8 @@ object UserAgentTool {
         Constants.IOS_APP_VERSION_CODE
     )
 
+    const val REAL_CHROME_USER_AGENT = "Mozilla/5.0 (Linux; Android 14; Pixel 8 Pro Build/UQ1A.240105.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.179 Mobile Safari/537.36"
+
     fun getAccountUserAgent(@AccountType type: Int, device: String?): String {
         if (type == AccountType.VK_ANDROID_HIDDEN || type == AccountType.KATE_HIDDEN || type == AccountType.IOS_HIDDEN) {
             if (device.nonNullNoEmpty()) {

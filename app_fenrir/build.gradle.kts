@@ -167,7 +167,7 @@ dependencies {
     implementation(libs.firebase.messaging) {
         exclude("com.google.firebase", "firebase-installations")
     }
-    //implementation(project(":native"))
+    implementation(project(":native"))
     implementation(project(":fenrir_common"))
     implementation(project(":firebase-installations"))
     implementation(project(":picasso3"))

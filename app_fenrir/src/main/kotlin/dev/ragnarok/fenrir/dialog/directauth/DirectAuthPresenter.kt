@@ -45,6 +45,34 @@ class DirectAuthPresenter(savedInstanceState: Bundle?) :
         requiredVKIdCaptcha?.success_token = token
     }
 
+    private var currentClientId: String = Constants.API_ID.toString()
+    private var currentClientSecret: String = Constants.SECRET
+
+    fun fireClientTypeSelected(position: Int) {
+        when (position) {
+            0 -> { // Android
+                currentClientId = dev.ragnarok.fenrir.api.Auth.ID_ANDROID
+                currentClientSecret = dev.ragnarok.fenrir.api.Auth.SECRET_ANDROID
+            }
+            1 -> { // iPhone
+                currentClientId = dev.ragnarok.fenrir.api.Auth.ID_IPHONE
+                currentClientSecret = dev.ragnarok.fenrir.api.Auth.SECRET_IPHONE
+            }
+            2 -> { // iPad
+                currentClientId = dev.ragnarok.fenrir.api.Auth.ID_IPAD
+                currentClientSecret = dev.ragnarok.fenrir.api.Auth.SECRET_IPAD
+            }
+            3 -> { // Windows Phone
+                currentClientId = dev.ragnarok.fenrir.api.Auth.ID_WINDOWS_PHONE
+                currentClientSecret = dev.ragnarok.fenrir.api.Auth.SECRET_WINDOWS_PHONE
+            }
+            4 -> { // Kate Mobile
+                currentClientId = dev.ragnarok.fenrir.api.Auth.ID_KATE
+                currentClientSecret = dev.ragnarok.fenrir.api.Auth.SECRET_KATE
+            }
+        }
+    }
+
     private fun doLogin(forceSms: Boolean) {
         view?.hideKeyboard()
         val trimmedUsername = if (username.nonNullNoEmpty()) username?.trim() else ""
@@ -64,8 +92,8 @@ class DirectAuthPresenter(savedInstanceState: Bundle?) :
             networker.vkDirectAuth()
                 .directLogin(
                     "password",
-                    Constants.API_ID,
-                    Constants.SECRET,
+                    currentClientId.toInt(),
+                    currentClientSecret,
                     trimmedUsername,
                     trimmedPass,
                     Constants.AUTH_API_VERSION,
@@ -102,6 +130,7 @@ class DirectAuthPresenter(savedInstanceState: Bundle?) :
         } else if (t is VKIdCaptchaNeedException) {
             requiredVKIdCaptcha = VKIdCaptcha(t.redirect_uri, t.domain, null)
         } else if (t is NeedValidationException) {
+            requireSmsHelp = true // Always allow manual SMS request if validation is needed
             if (Constants.DEFAULT_ACCOUNT_TYPE == AccountType.KATE) {
                 RedirectUrl = t.validationURL
                 if (!RedirectUrl.isNullOrEmpty()) {
@@ -147,6 +176,7 @@ class DirectAuthPresenter(savedInstanceState: Bundle?) :
                     }
                 }
                 if (phone.nonNullNoEmpty() && !sid.isNullOrEmpty() && requireSmsCode) {
+                    /*
                     appendJob(
                         networker.vkAuth()
                             .validatePhone(
@@ -163,6 +193,7 @@ class DirectAuthPresenter(savedInstanceState: Bundle?) :
                             .fromIOToMain({ }) {
                                 showError(getCauseIfRuntime(t))
                             })
+                     */
                 }
             }
         } else {

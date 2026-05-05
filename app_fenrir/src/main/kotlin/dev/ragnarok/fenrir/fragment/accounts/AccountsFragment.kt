@@ -95,7 +95,7 @@ class AccountsFragment : BaseMvpFragment<AccountsPresenter, IAccountsView>(), IA
                 )
             )
         } else {
-            customToast?.showToastError(R.string.not_supported_hide)
+            navigateToSecuritySettings()
         }
     }
     private val requestWritePermissionExchangeToken = requestPermissionsAbs(
@@ -113,7 +113,7 @@ class AccountsFragment : BaseMvpFragment<AccountsPresenter, IAccountsView>(), IA
             )
         } else {
             presenter?.fireResetTempAccount()
-            customToast?.showToastError(R.string.not_supported_hide)
+            navigateToSecuritySettings()
         }
     }
     private val requestReadPermissionImportAccount = requestPermissionsAbs(
@@ -126,6 +126,17 @@ class AccountsFragment : BaseMvpFragment<AccountsPresenter, IAccountsView>(), IA
         arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
     ) {
         startImportByExchangeToken()
+    }
+
+    private fun navigateToSecuritySettings() {
+        MaterialAlertDialogBuilder(requireActivity())
+            .setTitle(R.string.not_supported_hide)
+            .setMessage("Для выполнения этого действия необходимо установить ПИН-код в настройках безопасности.")
+            .setPositiveButton("НАСТРОЙКИ") { _, _ ->
+                dev.ragnarok.fenrir.place.PlaceFactory.securitySettingsPlace.tryOpenWith(requireActivity())
+            }
+            .setNegativeButton(R.string.button_cancel, null)
+            .show()
     }
 
     private var empty: TextView? = null
@@ -288,16 +299,67 @@ class AccountsFragment : BaseMvpFragment<AccountsPresenter, IAccountsView>(), IA
             }
         }).attachToRecyclerView(mRecyclerView)
         root.findViewById<FloatingActionButton>(R.id.auth).setOnClickListener {
-            if (DEFAULT_ACCOUNT_TYPE == AccountType.KATE) {
-                startLoginViaWeb()
-            } else {
-                startDirectLogin()
-            }
+            val options = arrayOf(
+                getString(R.string.login_title), // "Вход" (Direct)
+                "Вход через WebView (Kate ID)", 
+                "Вход через Браузер (Kate ID)",
+                "Вход через VKHOST (Официальный ID)"
+            )
+            MaterialAlertDialogBuilder(requireActivity())
+                .setTitle(R.string.entry_account)
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> startDirectLogin()
+                        1 -> startLoginViaWebKate()
+                        2 -> startLoginViaExternalBrowser()
+                        3 -> startManualLinkLogin()
+                    }
+                }
+                .show()
         }
         mAdapter = AccountAdapter(requireActivity(), emptyList(), this)
         mRecyclerView?.adapter = mAdapter
         return root
     }
+
+    private fun startManualLinkLogin() {
+        MaterialAlertDialogBuilder(requireActivity())
+            .setTitle("Прямой вход (Official)")
+            .setMessage("Выберите тип официального токена. Это откроет страницу VK прямо в браузере:\n\n1. Нажмите кнопку.\n2. Залогиньтесь, скопируйте АДРЕС белой страницы.\n3. Вернитесь и нажмите 'ВСТАВИТЬ ССЫЛКУ'.")
+            .setNeutralButton("ANDROID") { _, _ ->
+                dev.ragnarok.fenrir.link.LinkHelper.openLinkInBrowser(requireActivity(), dev.ragnarok.fenrir.api.Auth.getMagicUrlAndroid())
+            }
+            .setNegativeButton("IPHONE") { _, _ ->
+                dev.ragnarok.fenrir.link.LinkHelper.openLinkInBrowser(requireActivity(), dev.ragnarok.fenrir.api.Auth.getMagicUrlIPhone())
+            }
+            .setPositiveButton("ВСТАВИТЬ ССЫЛКУ") { _, _ ->
+                EntryAccountDialog().show(parentFragmentManager, "EntryAccountDialog")
+            }
+            .show()
+    }
+
+
+
+    private fun startLoginViaWebKate() {
+        val intent = createIntent(requireActivity(), dev.ragnarok.fenrir.api.Auth.ID_KATE, scope)
+        requestLoginWeb.launch(intent)
+    }
+
+    private fun startLoginViaExternalBrowser() {
+        val url = dev.ragnarok.fenrir.api.Auth.getUrl(dev.ragnarok.fenrir.api.Auth.ID_KATE, scope, null)
+        dev.ragnarok.fenrir.link.LinkHelper.openLinkInBrowser(requireActivity(), url)
+        
+        MaterialAlertDialogBuilder(requireActivity())
+            .setTitle("Вход через браузер")
+            .setMessage("1. Залогиньтесь в открывшемся браузере.\n2. Скопируйте АДРЕС белой страницы (blank.html) из строки браузера.\n3. Нажмите ОК и вставьте ссылку.")
+            .setPositiveButton(R.string.button_ok) { _, _ ->
+                EntryAccountDialog().show(parentFragmentManager, "EntryAccountDialog")
+            }
+            .setNegativeButton(R.string.button_cancel, null)
+            .show()
+    }
+
+
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -383,7 +445,7 @@ class AccountsFragment : BaseMvpFragment<AccountsPresenter, IAccountsView>(), IA
     }
 
     override fun startLoginViaWeb() {
-        val intent = createIntent(requireActivity(), Constants.API_ID.toString(), scope)
+        val intent = createIntent(requireActivity(), dev.ragnarok.fenrir.api.Auth.ID_KATE, scope)
         requestLoginWeb.launch(intent)
     }
 
@@ -544,7 +606,7 @@ class AccountsFragment : BaseMvpFragment<AccountsPresenter, IAccountsView>(), IA
                 1 -> presenter?.createShortcut(requireActivity(), account)
                 2 -> presenter?.fireSetAsActive(account)
                 3 -> if (!Settings.get().security().isUsePinForSecurity) {
-                    customToast?.showToastError(R.string.not_supported_hide)
+                    navigateToSecuritySettings()
                 } else {
                     presenter?.fireSetTempAccount(account.getOwnerObjectId())
                     requestEnterPinForShowPassword.launch(
@@ -582,7 +644,7 @@ class AccountsFragment : BaseMvpFragment<AccountsPresenter, IAccountsView>(), IA
                         requestWritePermissionExchangeToken.launch()
                     } else {
                         if (!Settings.get().security().isUsePinForSecurity) {
-                            customToast?.showToastError(R.string.not_supported_hide)
+                            navigateToSecuritySettings()
                         } else {
                             requestEnterPinForExchangeToken.launch(
                                 Intent(
@@ -728,7 +790,7 @@ class AccountsFragment : BaseMvpFragment<AccountsPresenter, IAccountsView>(), IA
                         )
                     )
                 } else {
-                    customToast?.showToastError(R.string.not_supported_hide)
+                    navigateToSecuritySettings()
                 }
                 return true
             }

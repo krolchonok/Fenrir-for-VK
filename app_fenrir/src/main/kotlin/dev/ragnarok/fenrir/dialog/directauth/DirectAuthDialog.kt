@@ -7,10 +7,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.ArrayAdapter
 import android.widget.ImageView
 import androidx.appcompat.app.AlertDialog
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.materialswitch.MaterialSwitch
+import com.google.android.material.textfield.MaterialAutoCompleteTextView
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textview.MaterialTextView
 import dev.ragnarok.fenrir.AccountType
@@ -41,10 +43,23 @@ class DirectAuthDialog : BaseMvpDialogFragment<DirectAuthPresenter, IDirectAuthV
     private var mCaptchaLegacyImage: ImageView? = null
     private var mEnterAppCodeRoot: View? = null
     private var mAppCode: TextInputEditText? = null
+    private var mClientTypeSpinner: MaterialAutoCompleteTextView? = null
+    
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val builder = MaterialAlertDialogBuilder(requireContext())
         val view = View.inflate(requireActivity(), R.layout.dialog_direct_auth, null)
+        
+        mClientTypeSpinner = view.findViewById(R.id.client_type_spinner)
+        val clientOptions = arrayOf("VK Android", "iPhone", "iPad", "Windows Phone", "Kate Mobile")
+        val adapter = ArrayAdapter(requireContext(), R.layout.spinner_item, clientOptions)
+        mClientTypeSpinner?.setAdapter(adapter)
+        mClientTypeSpinner?.setText(clientOptions[0], false)
+        mClientTypeSpinner?.setOnItemClickListener { _, _, position, _ ->
+            presenter?.fireClientTypeSelected(position)
+        }
+
         mLogin = view.findViewById(R.id.field_username)
+
         mLogin?.addTextChangedListener(object : TextWatcherAdapter() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 presenter?.fireLoginEdit(s)

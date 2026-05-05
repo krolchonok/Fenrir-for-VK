@@ -11,45 +11,56 @@ import java.io.UnsupportedEncodingException
 import java.net.URLEncoder
 
 object Auth {
-    const val redirect_url = "https://oauth.vk.ru/blank.html"
+    const val redirect_url = "https://oauth.vk.com/blank.html"
     private const val TAG = "Fenrir.Auth"
+
+    // Client IDs for Web Auth and Direct Auth
+    const val ID_KATE = "2685278"
+    const val SECRET_KATE = "lxhD8OD7dMsqtXIm5IUY"
+
+    const val ID_ANDROID = "2274003"
+    const val SECRET_ANDROID = "hHbZxrka2uZ6jB1inYsH"
+    
+    const val ID_IPHONE = "3140623"
+    const val SECRET_IPHONE = "VeWdmVclDCtn6ihuP1nt"
+
+    const val ID_IPAD = "3682744"
+    const val SECRET_IPAD = "m7wByByS3uz63tY943s1"
+
+    const val ID_WINDOWS_PHONE = "3697615"
+    const val SECRET_WINDOWS_PHONE = "AlVXZFMUqyrnABp8ncuU"
+
 
     @Throws(UnsupportedEncodingException::class)
     fun getUrl(api_id: String, scope: String, groupIds: String?): String {
-        var url = "https://oauth.vk.ru/authorize?client_id=$api_id"
-        url = (url + "&display=mobile&scope="
-                + scope + "&redirect_uri=" + URLEncoder.encode(
-            redirect_url,
-            "utf-8"
-        ) + "&response_type=token"
-                + "&v=" + URLEncoder.encode(
-            Constants.API_VERSION,
-            "utf-8"
-        ) + "&lang=" + URLEncoder.encode(
-            Constants.DEVICE_COUNTRY_CODE, "utf-8"
-        ) + "&device_id=" + URLEncoder.encode(
-            Utils.getDeviceId(
-                Constants.DEFAULT_ACCOUNT_TYPE,
-                provideApplicationContext()
-            ), "utf-8"
-        ))
+        // Optimized URL based on successful curl diagnostic
+        var url = "https://oauth.vk.com/authorize?client_id=$api_id"
+        url = (url + "&display=mobile&scope=" + URLEncoder.encode(scope, "utf-8")
+                + "&redirect_uri=" + URLEncoder.encode(redirect_url, "utf-8")
+                + "&response_type=token&v=5.131")
+        
         if (groupIds.nonNullNoEmpty()) {
             url = "$url&group_ids=$groupIds"
         }
         return url
     }
 
-    //https://vk.ru/dev/permission
-    //return "notify,friends,photos,audio,video,stories,pages,status,notes,messages,wall,offline,docs,groups,notifications,stats,email,market";
+    // Direct logic from vkhost: Uses specific scope masks and official IDs
+    fun getMagicUrlAndroid(): String {
+        return "https://oauth.vk.com/authorize?client_id=2274003&scope=1073737727&redirect_uri=https://oauth.vk.com/blank.html&display=mobile&response_type=token&v=5.131"
+    }
+
+    fun getMagicUrlIPhone(): String {
+        return "https://oauth.vk.com/authorize?client_id=3140623&scope=1073737727&redirect_uri=https://oauth.vk.com/blank.html&display=mobile&response_type=token&v=5.131"
+    }
+
+
 
     val scope: String
-        get() =//https://vk.ru/dev/permission
-            //return "notify,friends,photos,audio,video,stories,pages,status,notes,messages,wall,offline,docs,groups,notifications,stats,email,market";
-            if (Constants.DEFAULT_ACCOUNT_TYPE == AccountType.KATE) {
-                "notify,friends,photos,audio,video,docs,status,notes,pages,wall,groups,messages,offline,notifications,stories"
-            } else {
-                "all"
-            }
+        get() = "notify,friends,photos,audio,video,docs,status,notes,pages,wall,groups,messages,offline,notifications,stories"
+    
+    val scopeAll: String = "all"
+
 
     @Throws(Exception::class)
     fun parseRedirectUrl(url: String): Array<String> {

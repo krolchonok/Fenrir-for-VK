@@ -34,4 +34,4 @@ include(
     ":camera2"
 )
 
-//include(":native")
+include(":native")

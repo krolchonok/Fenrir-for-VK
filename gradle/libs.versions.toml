@@ -3,10 +3,10 @@
 developerBuild = "false"
 
 agpVersion = "9.2.0"
-appCompileSDK = "37"
+appCompileSDK = "37.0"
 appBuildTools = "37.0.0"
 appNdk = "30.0.14904198"
-appCMake = "4.1.2"
+appCMake = "3.22.1"
 appMinSDKDevelop = "29"
 appMinSDKNotDevelop = "26"
 appTargetSDK = "37"

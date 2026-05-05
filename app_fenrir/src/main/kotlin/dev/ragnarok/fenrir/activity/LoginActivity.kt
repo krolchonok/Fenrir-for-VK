@@ -52,7 +52,7 @@ class LoginActivity : AppCompatActivity() {
         webview.settings.blockNetworkLoads = false
         webview.settings.blockNetworkImage = false
         webview.clearCache(true)
-        webview.settings.userAgentString = getUserAgentByType(Constants.DEFAULT_ACCOUNT_TYPE)
+        webview.settings.userAgentString = dev.ragnarok.fenrir.UserAgentTool.REAL_CHROME_USER_AGENT
 
         //Чтобы получать уведомления об окончании загрузки страницы
         webview.webViewClient = VkontakteWebViewClient()
